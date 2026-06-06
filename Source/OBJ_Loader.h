@@ -17,6 +17,9 @@
 // Math.h - STD math Library
 #include <math.h>
 
+// SStream - STD Stream Library
+#include <sstream>
+
 // Print progress to console while loading (large models)
 #define OBJL_CONSOLE_OUTPUT
 
@@ -422,6 +425,17 @@ namespace objl
 			LoadedMeshes.clear();
 		}
 
+		// Load a file into the loader from the raw data
+		//
+		// If file is loaded return true
+		//
+		// If the file is unable to be loaded return false
+		bool LoadFileRaw(std::string Data)
+		{
+			std::istringstream stream(Data);
+			return LoadFileStream(stream);
+		}
+
 		// Load a file into the loader
 		//
 		// If file is loaded return true
@@ -440,6 +454,21 @@ namespace objl
 			if (!file.is_open())
 				return false;
 
+			bool ret = LoadFileStream(file);
+
+			file.close();
+
+			return ret;
+		}
+
+		// Load a stream into the loader
+		//
+		// If stream is loaded return true
+		//
+		// If the stream is unable to be loaded
+		// return false
+		bool LoadFileStream(std::istream& Stream)
+		{
 			LoadedMeshes.clear();
 			LoadedVertices.clear();
 			LoadedIndices.clear();
@@ -464,7 +493,7 @@ namespace objl
 			#endif
 
 			std::string curline;
-			while (std::getline(file, curline))
+			while (std::getline(Stream, curline))
 			{
 				#ifdef OBJL_CONSOLE_OUTPUT
 				if ((outputIndicator = ((outputIndicator + 1) % outputEveryNth)) == 1)
@@ -682,8 +711,6 @@ namespace objl
 				// Insert Mesh
 				LoadedMeshes.push_back(tempMesh);
 			}
-
-			file.close();
 
 			// Set Materials for each Mesh
 			for (int i = 0; i < MeshMatNames.size(); i++)
