@@ -430,10 +430,10 @@ namespace objl
 		// If file is loaded return true
 		//
 		// If the file is unable to be loaded return false
-		bool LoadFileRaw(std::string Data)
+		bool LoadFileRaw(std::string Data, std::string MtlPathPrefix)
 		{
 			std::istringstream stream(Data);
-			return LoadFileStream(stream);
+			return LoadFileStream(stream, MtlPathPrefix);
 		}
 
 		// Load a file into the loader
@@ -454,7 +454,20 @@ namespace objl
 			if (!file.is_open())
 				return false;
 
-			bool ret = LoadFileStream(file);
+			std::vector<std::string> temp;
+			algorithm::split(Path, temp, "/");
+
+			std::string pathprefix = "";
+
+			if (temp.size() != 1)
+			{
+				for (int i = 0; i < temp.size() - 1; i++)
+				{
+					pathprefix += temp[i] + "/";
+				}
+			}
+
+			bool ret = LoadFileStream(file, pathprefix);
 
 			file.close();
 
@@ -467,7 +480,7 @@ namespace objl
 		//
 		// If the stream is unable to be loaded
 		// return false
-		bool LoadFileStream(std::istream& Stream)
+		bool LoadFileStream(std::istream& Stream, std::string PathPrefixForMtlFile)
 		{
 			LoadedMeshes.clear();
 			LoadedVertices.clear();
@@ -671,21 +684,7 @@ namespace objl
 					// Generate LoadedMaterial
 
 					// Generate a path to the material file
-					std::vector<std::string> temp;
-					algorithm::split(Path, temp, "/");
-
-					std::string pathtomat = "";
-
-					if (temp.size() != 1)
-					{
-						for (int i = 0; i < temp.size() - 1; i++)
-						{
-							pathtomat += temp[i] + "/";
-						}
-					}
-
-
-					pathtomat += algorithm::tail(curline);
+					std::string pathtomat = PathPrefixForMtlFile + algorithm::tail(curline);
 
 					#ifdef OBJL_CONSOLE_OUTPUT
 					std::cout << std::endl << "- find materials in: " << pathtomat << std::endl;
